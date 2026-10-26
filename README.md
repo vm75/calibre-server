@@ -1,7 +1,7 @@
 # calibre-server
 
 [![CI](https://github.com/vm75/calibre-server/actions/workflows/ci.yml/badge.svg)](https://github.com/vm75/calibre-server/actions/workflows/ci.yml)
-[![Publish version](https://github.com/vm75/calibre-server/actions/workflows/publish.yml/badge.svg)](https://github.com/vm75/calibre-server/actions/workflows/publish.yml)
+[![Publish version](https://github.com/vm75/calibre-server/actions/workflows/ci.yml/badge.svg)](https://github.com/vm75/calibre-server/actions/workflows/ci.yml)
 [![Docker Pulls](https://img.shields.io/docker/pulls/vm75/calibre-server)](https://hub.docker.com/r/vm75/calibre-server)
 [![Docker Image Size](https://img.shields.io/docker/image-size/vm75/calibre-server/v9.15.0-ls423)](https://hub.docker.com/r/vm75/calibre-server)
 [![GitHub release (latest by date)](https://img.shields.io/github/v/tag/vm75/calibre-server?label=latest%20tag)](https://github.com/vm75/calibre-server/tags)

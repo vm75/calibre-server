@@ -4,7 +4,7 @@
 [![Docker Stars](https://img.shields.io/docker/stars/vm75/calibre-server)](https://hub.docker.com/r/vm75/calibre-server)
 [![Docker Image Size](https://img.shields.io/docker/image-size/vm75/calibre-server/v9.15.0-ls423)](https://hub.docker.com/r/vm75/calibre-server)
 [![GitHub release (latest by date)](https://img.shields.io/github/v/tag/vm75/calibre-server?label=latest%20tag)](https://github.com/vm75/calibre-server/tags)
-[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/vm75/calibre-server/publish.yml?label=publish)](https://github.com/vm75/calibre-server/actions/workflows/publish.yml)
+[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/vm75/calibre-server/ci.yml?label=publish)](https://github.com/vm75/calibre-server/actions/workflows/ci.yml)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL--3.0-blue.svg)](https://github.com/vm75/calibre-server/blob/main/LICENSE)
 
 LinuxServer Calibre with optional remembered persistent browser sessions. Retains upstream desktop, configuration, and libraries, while preserving HTTP Basic/Digest authentication for OPDS e-reader clients (such as Moon+ Reader, Librera, and KOReader).
