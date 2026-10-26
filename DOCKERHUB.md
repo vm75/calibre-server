@@ -1,66 +1,76 @@
-# Registry publishing
+# calibre-server (vm75/calibre-server)
 
-A version tag on a commit belonging to `main` publishes the tested image to:
+[![Docker Pulls](https://img.shields.io/docker/pulls/vm75/calibre-server)](https://hub.docker.com/r/vm75/calibre-server)
+[![Docker Stars](https://img.shields.io/docker/stars/vm75/calibre-server)](https://hub.docker.com/r/vm75/calibre-server)
+[![Docker Image Size](https://img.shields.io/docker/image-size/vm75/calibre-server/v9.15.0-ls423)](https://hub.docker.com/r/vm75/calibre-server)
+[![GitHub release (latest by date)](https://img.shields.io/github/v/tag/vm75/calibre-server?label=latest%20tag)](https://github.com/vm75/calibre-server/tags)
+[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/vm75/calibre-server/publish.yml?label=publish)](https://github.com/vm75/calibre-server/actions/workflows/publish.yml)
+[![License: GPL-3.0](https://img.shields.io/badge/License-GPL--3.0-blue.svg)](https://github.com/vm75/calibre-server/blob/main/LICENSE)
 
-- `ghcr.io/vm75/calibre-server:VERSION`
-- `docker.io/vm75/calibre-server:VERSION`
+LinuxServer Calibre with optional remembered persistent browser sessions. Retains upstream desktop, configuration, and libraries, while preserving HTTP Basic/Digest authentication for OPDS e-reader clients (such as Moon+ Reader, Librera, and KOReader).
 
-VERSION is exactly the upstream LinuxServer tag, for example `v9.15.0-ls423`.
-There are no separate patch-version or latest aliases. The same version may be
-retagged and republished intentionally; consumers needing immutable releases
-should use an image digest. Source/base provenance is recorded in OCI labels.
+Source repository & full documentation: [GitHub: vm75/calibre-server](https://github.com/vm75/calibre-server)
 
-## One-time repository setup
+---
 
-GitHub Actions must be enabled. GHCR uses the automatic GITHUB_TOKEN with the
-workflow's `packages: write` permission; no separate GHCR PAT is required. If a
-pre-existing GHCR package belongs to another repository, grant this repository
-write access in its package settings. GHCR packages can initially be private;
-set the package visibility to public after its first publish if desired.
+## Short Description (for Docker Hub repository summary / overview)
 
-Create Docker Hub repository `vm75/calibre-server` and configure these Actions
-secrets in `vm75/calibre-server`:
+> LinuxServer Calibre with optional persistent remembered browser sessions and OPDS Basic/Digest authentication support.
 
-| Secret | Value |
-| --- | --- |
-| DOCKERHUB_USERNAME | Docker Hub account authorized to push to vm75/calibre-server. |
-| DOCKERHUB_TOKEN | Docker Hub access token with write access to that repository. |
+---
 
-Do not commit tokens or put them in command-line arguments. Configure them at
-<https://github.com/vm75/calibre-server/settings/secrets/actions>. The publish
-workflow fails if either secret is absent; pull-request CI does not need secrets.
-If repository rules prohibit tag updates, allow the release operator to update
-these version tags so `scripts/retag.sh` can perform the requested retry workflow.
+## Overview
 
-## What happens on a version tag
+Upstream Calibre Content Server requires users to authenticate repeatedly or rely strictly on HTTP Basic authentication when accessed via modern browsers. This image provides a clean patch on top of the official `linuxserver/calibre` image to introduce an optional web-based login form with session management:
 
-1. Verify tag syntax, checkout/event consistency, and ancestry on main.
-2. Check registry secret configuration and run release-helper tests.
-3. Pull `ghcr.io/linuxserver/calibre:VERSION`, freeze its digest, download the
-   matching Calibre source, apply the patch, build, and run isolated auth tests.
-4. Log in to both registries without exposing passwords in arguments.
-5. Verify the tag is still current, then push the tested image to GHCR; recheck
-   the tag again before pushing the same image to Docker Hub.
+- **Session cookie** (expires after 24h or browser exit)
+- **30 days persistent cookie**
+- **Permanent login** ("Until I sign out", auto-renewing persistent session)
+- **OPDS compatibility**: Retains native Basic/Digest authentication on `/opds` for mobile readers without interruption
+- **Security & Integrity**: Token hashing, keyed credential fingerprints, CSRF tokens, strict origin validation, rate-limiting & banning integration, and password-change revocation
 
-Tag pushes trigger GitHub Actions directly; a GitHub Release object is not
-required. Helpers use annotated tags with unique attempt metadata, so retagging
-the same version/commit still generates a new push event. They push only the
-tag; commit/push main before running them.
+## Quick Start (Docker Compose)
 
-## Failure and retry
+Use this image as a drop-in replacement for `ghcr.io/linuxserver/calibre` / `linuxserver/calibre`:
 
-If a patch, build, or test fails, nothing is published by that run. Correct code
-on main and run `scripts/retag.sh VERSION`; do not invent a new upstream version.
-Superseded runs are cancelled and stale-tag guards prevent a completed old build
-from proceeding as the current release.
+```yaml
+services:
+  calibre-server:
+    image: docker.io/vm75/calibre-server:v9.15.0-ls423
+    container_name: calibre-server
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+      - CALIBRE_REMEMBER_ORIGIN=https://books.example.com
+    volumes:
+      - /path/to/calibre/config:/config
+      - /path/to/calibre/library:/books
+    ports:
+      - 8080:8080
+      - 8081:8081
+    restart: unless-stopped
+```
 
-Publishing to two registries is not a single atomic transaction. A registry
-outage or access error can leave only one updated. Fix credentials/access and
-retag the same version, including at the same commit, to publish both again.
-Cancel an obsolete run if needed and inspect Actions logs before retrying.
+> **Note**: Replace `https://books.example.com` with your exact external HTTPS reverse proxy origin. When using reverse proxies (nginx, Caddy, Traefik), ensure the proxy forwards `Host` and `Authorization` headers.
 
-Confirm success in the [Actions page](https://github.com/vm75/calibre-server/actions)
-and inspect both registry tags. For a deployment, replace the image in your
-existing Compose/Quadlet configuration with a published tag or digest and keep
-CALIBRE_REMEMBER_ORIGIN set. Retagging a registry image does not restart running
-containers; explicitly pull/recreate them when ready.
+## Available Tags & Versioning
+
+Images are published under the **exact same version tag** as the upstream LinuxServer Calibre image:
+
+- `docker.io/vm75/calibre-server:v9.15.0-ls423`
+- `ghcr.io/vm75/calibre-server:v9.15.0-ls423`
+
+There is intentionally no moving `latest` tag; specify the exact upstream version tag or pin an immutable image digest.
+
+## Session Management & Usage
+
+1. Open `/auth/login` in your web browser.
+2. Sign in with an existing Calibre user account created in Calibre's Content Server user management.
+3. Select your desired session persistence:
+   - **This browser session**
+   - **30 days**
+   - **Until I sign out**
+4. Manage or revoke active sessions at `/auth/sessions` or via **Account · sign out**.
+
+For detailed architecture, local builds, security model, and CI/CD release workflow, see the [GitHub repository README](https://github.com/vm75/calibre-server).

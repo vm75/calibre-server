@@ -45,7 +45,7 @@ require Calibre's bundled Python, not the host Python environment.
 ## Done and documentation
 
 Run script/release checks and relevant candidate-image tests. Review workflow
-changes for credential exposure and tag races. Update only documentation made
-inaccurate by the change: usage/session behavior in `README.md`, release and
-registry setup in `DOCKERHUB.md`, coding/build boundaries here. Do not claim
-registry publication or browser behavior without observing it.
+changes for credential exposure and tag races. Update only documentation made inaccurate by the change: usage/session
+behavior and release/registry setup in `README.md`, Docker Hub description in
+`DOCKERHUB.md`, coding/build boundaries here. Do not claim registry
+publication or browser behavior without observing it.
