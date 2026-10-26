@@ -1,0 +1,8 @@
+*
+!Containerfile
+!LICENSE
+!patch_auth.py
+!remember.py
+!remember-client.js
+!src/
+!src/**

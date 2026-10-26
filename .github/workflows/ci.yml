@@ -1,0 +1,26 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Check scripts and release behavior
+        run: scripts/check.sh
+      - name: Build and test the known compatible upstream version
+        env:
+          CONTAINER_ENGINE: docker
+        run: scripts/build.sh v9.15.0-ls423 localhost/calibre-server:ci
