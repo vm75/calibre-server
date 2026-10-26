@@ -237,12 +237,12 @@ class RememberTest(unittest.TestCase):
             status, _, body, _ = self.request(server, '/interface-data/init', cookies)
             self.assertEqual(status, 200)
             self.assertEqual(set(json.loads(body)['library_map']), {'library'})
-            self.assertEqual(self.request(server, '/cdb/delete-books/999/library', cookies,
+            self.assertEqual(self.request(server, '/cdb/delete-books/999/library', cookies, method='POST',
                                          headers={'X-Calibre-CSRF': cookies[CSRF]})[0], 403)
-            # GET-capable mutations and the dynamic command API also require CSRF.
+            # Dynamic command API, write endpoints, and GET-capable mutations also require CSRF.
             alice, _ = self.login(server)
-            self.assertEqual(self.request(server, '/cdb/delete-books/999/library', alice)[0], 403)
-            self.assertEqual(self.request(server, '/cdb/cmd/remove/0', alice)[0], 403)
+            self.assertEqual(self.request(server, '/cdb/delete-books/999/library', alice, method='POST')[0], 403)
+            self.assertEqual(self.request(server, '/cdb/cmd/remove/0', alice, method='POST')[0], 403)
             self.assertEqual(self.request(server, '/interface-data/set-session-data', alice)[0], 403)
 
     def test_gui_password_change_and_user_removal_revoke(self):
