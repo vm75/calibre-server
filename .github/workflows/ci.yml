@@ -1,4 +1,4 @@
-name: CI
+name: CI / Publish
 on:
   push:
     tags: ['v*', '[0-9]*']
@@ -6,7 +6,7 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: ci-${{ github.ref }}
+  group: publish-${{ github.ref }}
   cancel-in-progress: true
 jobs:
   test:
@@ -22,3 +22,43 @@ jobs:
         env:
           CONTAINER_ENGINE: docker
         run: scripts/build.sh v9.15.0-ls423 localhost/calibre-server:ci
+
+  publish:
+    needs: test
+    if: github.repository == 'vm75/calibre-server'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      packages: write
+    env:
+      CONTAINER_ENGINE: docker
+      RELEASE_TAG: ${{ github.ref_name }}
+      EVENT_TAG_OBJECT: ${{ github.event.after }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify current tag and main ancestry
+        run: scripts/verify-release.sh "$RELEASE_TAG" "$GITHUB_SHA" "$EVENT_TAG_OBJECT"
+      - name: Check registry configuration
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: |
+          test -n "$DOCKERHUB_USERNAME" || { echo '::error::Set DOCKERHUB_USERNAME'; exit 1; }
+          test -n "$DOCKERHUB_TOKEN" || { echo '::error::Set DOCKERHUB_TOKEN with write access'; exit 1; }
+      - name: Pull exact upstream version, patch, build, and test
+        run: scripts/build.sh "$RELEASE_TAG" localhost/calibre-server:release
+      - name: Log in to both registries
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GHCR_USER: ${{ github.actor }}
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: |
+          printf '%s' "$GHCR_TOKEN" | docker login ghcr.io --username "$GHCR_USER" --password-stdin
+          printf '%s' "$DOCKERHUB_TOKEN" | docker login docker.io --username "$DOCKERHUB_USERNAME" --password-stdin
+      - name: Recheck tag and publish the tested image to both registries
+        run: scripts/publish.sh "$RELEASE_TAG" localhost/calibre-server:release "$GITHUB_SHA" "$EVENT_TAG_OBJECT"
